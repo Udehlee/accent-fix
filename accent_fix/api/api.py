@@ -4,6 +4,7 @@ import logging
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from contextlib import asynccontextmanager
 from services import (accent_detector, transcriber, error_detector,corrector, output)
+from services import (accent_detector, transcriber, corrector)
 from db import (get_cached_result, set_cached_result, save_transcript_log, create_tables )
 
 logging.basicConfig(level=logging.INFO)

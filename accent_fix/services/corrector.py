@@ -171,7 +171,7 @@ Only respond with those three lines. No extra text."""
                     continue
 
                 # Validate with Groq that the correction makes sense in context
-                should_apply, confidence, explanation = self._validate_with_llm(
+                should_apply, confidence, explanation = self.validate_with_llm(
                     original_word=original_word,
                     suggested_word=suggested_word,
                     context=context,
