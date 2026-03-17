@@ -25,7 +25,7 @@ class AccentDetector:
         self.feature_extractor = None
         self.model = None
         self.id2label = None
-        self._load_model()
+        self.load_model()
 
 
     def load_model(self):
