@@ -1,20 +1,19 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 import os
 import uuid
 import logging
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from contextlib import asynccontextmanager
-from services import (accent_detector, transcriber, error_detector,corrector, output)
-from services import (accent_detector, transcriber, corrector)
-from db import (get_cached_result, set_cached_result, save_transcript_log, create_tables )
+from accent_fix.services import accent_detector, transcriber, error_detector, corrector, output_builder
+from accent_fix.db import get_cached_result, set_cached_result, save_transcript_log, create_tables
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
-
 TEMP_DIR = "temp"
 os.makedirs(TEMP_DIR, exist_ok=True)
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -54,7 +53,7 @@ async def upload_audio(file: UploadFile = File(...)):
         correction_result = corrector.correct(transcript_result, error_detection_result, accent_result)
 
         # build output
-        output = output.build(
+        output = output_builder.build(
             accent_result,
             transcript_result,
             error_detection_result,
