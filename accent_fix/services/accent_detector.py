@@ -116,3 +116,6 @@ class AccentDetector:
                 all_scores={},
                 error=str(e)
             )
+        
+
+accent_detector = AccentDetector()

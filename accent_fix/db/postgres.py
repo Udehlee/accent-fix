@@ -7,6 +7,8 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL not found")
 
 # Engine — the connection to the database
 engine = create_engine(
