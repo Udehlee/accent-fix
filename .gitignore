@@ -1,1 +1,5 @@
 .env
+accent_fix/__pycache__/
+accent_fix/api/__pycache__/
+accent_fix/db/__pycache__/
+accent_fix/services/__pycache__/
