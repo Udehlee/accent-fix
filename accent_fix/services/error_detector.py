@@ -138,7 +138,7 @@ class ErrorDetector:
 
                 # measure divergence between transcript and prediction
                 original_clean = word.lower().strip(".,!?;:")
-                divergence = self._calculate_divergence(original_clean, predicted_word)
+                divergence = self.calculate_divergence(original_clean, predicted_word)
 
                 # flag if divergence is above threshold
                 if divergence >= self.DIVERGENCE_THRESHOLD:

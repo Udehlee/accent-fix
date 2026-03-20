@@ -18,9 +18,6 @@ class TranscriptResult:
     error: Optional[str]       
 
 
-# ─────────────────────────────────────────
-# Service
-# ─────────────────────────────────────────
 class Transcriber:
     ASSEMBLYAI_API_KEY = os.getenv("ASSEMBLYAI_API_KEY")
     WHISPER_MODEL_SIZE = "base"
@@ -38,16 +35,15 @@ class Transcriber:
         logger.info("Whisper model loaded and ready as fallback")
 
 
-    def _transcribe_assemblyai(self, audio_path: str) -> TranscriptResult:
+    def transcribe_assemblyai(self, audio_path: str) -> TranscriptResult:
     
         logger.info(f"Transcribing with AssemblyAI: {audio_path}")
 
         config = aai.TranscriptionConfig(
-            speech_model=aai.SpeechModel.best,
-            language_code="en",
-            punctuate=True,
-            format_text=True,
-        )
+                language_code="en",
+                punctuate=True,
+                format_text=True,
+               )
 
         transcriber = aai.Transcriber(config=config)
         transcript = transcriber.transcribe(audio_path)
@@ -74,13 +70,15 @@ class Transcriber:
             error=None
         )
 
-    def _transcribe_whisper(self, audio_path: str) -> TranscriptResult:
+    def transcribe_whisper(self, audio_path: str) -> TranscriptResult:
         logger.info(f"AssemblyAI failed — falling back to local Whisper: {audio_path}")
 
         result = self.whisper_model.transcribe(
-            audio_path,
-            word_timestamps=True    
-        )
+                 audio_path,
+                 word_timestamps=True,
+                 language="en",
+                 task="transcribe"
+)
 
         # Extract word-level data from Whisper segments
         words = []
@@ -109,10 +107,12 @@ class Transcriber:
             error=None
         )
 
+        
+
     def transcribe(self, audio_path: str, engine: str = "assemblyai") -> TranscriptResult:
         try:
             logger.info("Attempting transcription with AssemblyAI")
-            result = self._transcribe_assemblyai(audio_path)
+            result = self.transcribe_assemblyai(audio_path)
             logger.info("Transcription successful with AssemblyAI")
             return result
 
@@ -120,7 +120,7 @@ class Transcriber:
             logger.warning(f"AssemblyAI failed: {e} — switching to Whisper fallback")
 
         try:
-            result = self._transcribe_whisper(audio_path)
+            result = self.transcribe_whisper(audio_path)
             logger.info("Transcription successful with Whisper fallback")
             return result
 

@@ -132,7 +132,7 @@ class Output:
             highlights = self.build_highlights(correction_result.corrections)
 
             # Calculate correction rate
-            correction_rate = self._calculate_correction_rate(
+            correction_rate = self.calculate_correction_rate(
                 total_corrections_applied,
                 total_words
             )

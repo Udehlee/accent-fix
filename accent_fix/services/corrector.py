@@ -1,28 +1,30 @@
 import os
 import logging
+import re
 from dataclasses import dataclass
 from typing import Optional
 from groq import Groq
-import re
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class Correction:
-    index: int            
-    corrected_word: str     
-    context: str            
-    confidence: float       
-    explanation: str        
+    index: int
+    original_word: str     
+    corrected_word: str
+    context: str
+    confidence: float
+    explanation: str
 
 @dataclass
 class CorrectionResult:
-    original_text: str        
-    corrected_text: str         
-    corrections: list           
-    total_corrections: int      
-    accent: str                
-    error: Optional[str] = None 
+    original_text: str
+    corrected_text: str
+    corrections: list
+    total_corrections: int
+    accent: str
+    error: Optional[str] = None
 
 
 class Corrector:
@@ -37,15 +39,8 @@ class Corrector:
             self.groq_client = None
             logger.warning("GROQ_API_KEY not found — corrections will use T5 prediction directly without LLM validation")
 
-  
-    def validate_with_llm(
-        self,
-        original_word: str,
-        suggested_word: str,
-        context: str,
-        accent: str
-    ) -> tuple[bool, float, str]:
-        
+ 
+    def _validate_with_llm(         self, original_word: str,suggested_word: str,context: str, accent: str) -> tuple[bool, float, str]:
         if not self.groq_client:
             # No Groq available — trust T5 prediction directly
             logger.warning("No Groq client — applying T5 prediction without validation")
@@ -73,7 +68,7 @@ Only respond with those three lines. No extra text."""
             response = self.groq_client.chat.completions.create(
                 model="mixtral-8x7b-32768",
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.1,     # low temperature = deterministic responses
+                temperature=0.1,
                 max_tokens=80
             )
 
@@ -104,22 +99,22 @@ Only respond with those three lines. No extra text."""
             return apply, round(confidence, 4), explanation
 
         except Exception as e:
-            logger.warning(f"Groq validation failed: {e} — applying T5 prediction directly")
-            return True, 0.75, f"LLM validation failed ({e}) — T5 prediction applied"
+            logger.warning(f"Groq validation failed: {e} — falling back to T5 prediction")
+            return True, 0.75, f"Groq unavailable — T5 prediction applied directly"
 
- 
-    # Rebuild Transcript
-    def _rebuild_transcript(self, original_text: str, corrections: list) -> str:   
+
+    def rebuild_transcript(self, original_text: str, corrections: list) -> str:
         corrected_text = original_text
 
         for correction in corrections:
             original = correction.original_word
             corrected = correction.corrected_word
 
+            # Preserve capitalization
             if original[0].isupper():
                 corrected = corrected.capitalize()
 
-            # Whole word replacement only — \b is word boundary
+            # Whole word replacement only
             pattern = r'\b' + re.escape(original) + r'\b'
             corrected_text = re.sub(
                 pattern,
@@ -131,12 +126,8 @@ Only respond with those three lines. No extra text."""
 
         return corrected_text
 
-    def correct(
-        self,
-        transcript_result,        
-        error_detection_result,  
-        accent_result            
-    ) -> CorrectionResult:
+
+    def correct(self,transcript_result,error_detection_result,accent_result) -> CorrectionResult:
         try:
             accent = accent_result.accent
             original_text = transcript_result.text
@@ -160,29 +151,24 @@ Only respond with those three lines. No extra text."""
             for detected_error in errors:
                 original_word = detected_error.original_word
                 context = detected_error.context
-
-                # T5 already predicted the correct word in the error detector
-                # We just read it directly — no lookup needed
                 suggested_word = detected_error.predicted_word
 
                 if not suggested_word or suggested_word == original_word.lower():
-                    # T5 had no useful prediction — skip
                     logger.debug(f"No useful T5 prediction for: '{original_word}' — skipping")
                     continue
 
-                # Validate with Groq that the correction makes sense in context
-                should_apply, confidence, explanation = self.validate_with_llm(
+                # Validate with Groq
+                should_apply, confidence, explanation = self._validate_with_llm(  
                     original_word=original_word,
                     suggested_word=suggested_word,
                     context=context,
                     accent=accent
                 )
 
-                # Apply only if Groq approved and confidence is above threshold
                 if should_apply and confidence >= self.AUTO_CORRECT_THRESHOLD:
                     applied_corrections.append(Correction(
                         index=detected_error.index,
-                        original_word=original_word,
+                        original_word=original_word,   
                         corrected_word=suggested_word,
                         context=context,
                         confidence=confidence,
@@ -198,8 +184,7 @@ Only respond with those three lines. No extra text."""
                         f"(apply={should_apply}, confidence={confidence:.0%})"
                     )
 
-            # Rebuild full transcript with all accepted corrections applied
-            corrected_text = self._rebuild_transcript(original_text, applied_corrections)
+            corrected_text = self.rebuild_transcript(original_text, applied_corrections)
 
             logger.info(
                 f"Correction complete — {len(applied_corrections)} corrections applied "
@@ -225,5 +210,6 @@ Only respond with those three lines. No extra text."""
                 accent=accent_result.accent if accent_result else "unknown",
                 error=str(e)
             )
+
 
 corrector = Corrector()

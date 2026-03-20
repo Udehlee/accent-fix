@@ -113,7 +113,7 @@ class AccentDetector:
             return AccentResult(
                 accent="unknown",
                 confidence=0.0,
-                all_scores={},
+                all_accents_scores={},
                 error=str(e)
             )
         
