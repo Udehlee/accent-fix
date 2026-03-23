@@ -1,7 +1,7 @@
 from accent_fix.services.accent_detector import accent_detector
 
 def test_accent_detector_returns_result():
-    result = accent_detector.detect("tests/sample_audio.mp3")
+    result = accent_detector.detect_accent("tests/sample_audio.mp3")
     
     assert result is not None
     assert result.accent is not None
