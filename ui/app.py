@@ -2,7 +2,7 @@ import gradio as gr
 import requests
 import os
 
-BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+BACKEND_URL = os.getenv("BACKEND_URL")
 
 
 def process_audio(audio_file, engine):
@@ -61,7 +61,7 @@ def process_audio(audio_file, engine):
         return (f"Something went wrong: {str(e)}", "", "", "", "")
 
 
-# ── Custom CSS ──
+# Custom CSS
 css = """
 /* Center the whole app and limit max width */
 .gradio-container {
@@ -107,7 +107,7 @@ textarea {
 }
 """
 
-# ── UI Layout ──
+# UI Layout 
 with gr.Blocks(css=css, title="AccentFix") as demo:
 
     # Header
@@ -121,7 +121,7 @@ with gr.Blocks(css=css, title="AccentFix") as demo:
         </div>
     """)
 
-    # ── Upload Section ──
+    # Upload Section 
     with gr.Group():
         audio_input = gr.Audio(
             label="Upload Audio",
@@ -143,7 +143,6 @@ with gr.Blocks(css=css, title="AccentFix") as demo:
 
     gr.HTML("<hr style='border:none;border-top:1px solid #eee;margin:8px 0'>")
 
-    # ── Accent Info ──
     accent_output = gr.Textbox(
         label="Accent Detection",
         lines=3,
@@ -151,7 +150,7 @@ with gr.Blocks(css=css, title="AccentFix") as demo:
         placeholder="Accent details will appear here..."
     )
 
-    # ── Transcripts ──
+    #  Transcripts 
     original_output = gr.Textbox(
         label="Original Transcript",
         lines=5,
@@ -166,7 +165,7 @@ with gr.Blocks(css=css, title="AccentFix") as demo:
         placeholder="Corrected transcript will appear here..."
     )
 
-    # ── Corrections ──
+
     highlights_output = gr.Textbox(
         label="Corrections Made",
         lines=6,
@@ -174,7 +173,6 @@ with gr.Blocks(css=css, title="AccentFix") as demo:
         placeholder="List of corrections will appear here..."
     )
 
-    # ── Summary ──
     summary_output = gr.Textbox(
         label="Summary",
         lines=3,
@@ -182,14 +180,14 @@ with gr.Blocks(css=css, title="AccentFix") as demo:
         placeholder="Summary will appear here..."
     )
 
-    # ── Footer ──
+
     gr.HTML("""
         <p style="text-align:center;color:#999;font-size:0.8rem;margin-top:16px;">
             Supported formats: mp3 · wav · m4a · webm · ogg · flac
         </p>
     """)
 
-    # ── Wire Button ──
+    # Wire Button
     submit_btn.click(
         fn=process_audio,
         inputs=[audio_input, engine_select],
